@@ -8,9 +8,10 @@ export default function MusicPlayer() {
 
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio || started) return
+    if (!audio) return
 
-    const startMusic = async () => {
+    // 進網站後立即嘗試播放（可能被瀏覽器阻擋）
+    const attemptAutoPlay = async () => {
       try {
         audio.volume = 0.5
         const promise = audio.play()
@@ -18,10 +19,12 @@ export default function MusicPlayer() {
           promise
             .then(() => {
               setStarted(true)
-              console.log('✅ 音樂開始播放')
+              console.log('✅ 自動播放成功')
             })
             .catch(err => {
-              console.error('❌ 播放失敗:', err.message)
+              console.log('⚠️ 自動播放被阻擋，需要使用者互動')
+              // 自動播放失敗，改成點擊才播
+              setupClickToPlay()
             })
         }
       } catch (err) {
@@ -29,14 +32,36 @@ export default function MusicPlayer() {
       }
     }
 
-    window.addEventListener('click', startMusic, { once: true })
-    window.addEventListener('touchstart', startMusic, { once: true })
+    // 延遲 500ms 再自動播（確保 audio 載入完成）
+    const timer = setTimeout(attemptAutoPlay, 500)
+    return () => clearTimeout(timer)
+  }, [])
 
-    return () => {
-      window.removeEventListener('click', startMusic)
-      window.removeEventListener('touchstart', startMusic)
+  // 點擊備用方案
+  const setupClickToPlay = () => {
+    const handleClick = async () => {
+      try {
+        const audio = audioRef.current
+        if (audio && !started) {
+          audio.volume = 0.5
+          const promise = audio.play()
+          if (promise instanceof Promise) {
+            promise
+              .then(() => {
+                setStarted(true)
+                console.log('✅ 點擊播放成功')
+              })
+              .catch(err => console.error('❌ 播放失敗:', err.message))
+          }
+        }
+      } catch (err) {
+        console.error('❌ 錯誤:', err)
+      }
     }
-  }, [started])
+
+    window.addEventListener('click', handleClick, { once: true })
+    window.addEventListener('touchstart', handleClick, { once: true })
+  }
 
   return (
     <audio
