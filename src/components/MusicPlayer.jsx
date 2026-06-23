@@ -1,15 +1,33 @@
 import { useState, useEffect, useRef } from 'react'
 
-// 暫時用測試音樂檢查是否能播
-const MUSIC_URL = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+const MUSIC_URL = 'https://raw.githubusercontent.com/zyx-0715/something/5b26b80af9d268e7dc0e3f27ece6f3e699c37310/music/music.mp3'
 
 export default function MusicPlayer() {
   const audioRef = useRef(null)
   const [started, setStarted] = useState(false)
+  const [musicBlob, setMusicBlob] = useState(null)
 
+  // 先下載音樂檔案
+  useEffect(() => {
+    const fetchMusic = async () => {
+      try {
+        const response = await fetch(MUSIC_URL)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        setMusicBlob(url)
+        console.log('✅ 音樂檔案已載入')
+      } catch (err) {
+        console.error('❌ 下載音樂失敗:', err)
+      }
+    }
+    fetchMusic()
+  }, [])
+
+  // 點擊開始播放
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio || started) return
+    if (!audio || started || !musicBlob) return
 
     const startMusic = async () => {
       try {
@@ -18,7 +36,7 @@ export default function MusicPlayer() {
         setStarted(true)
         console.log('✅ 音樂開始播放')
       } catch (err) {
-        console.log('❌ 播放失敗:', err)
+        console.error('❌ 播放失敗:', err)
       }
     }
 
@@ -29,13 +47,12 @@ export default function MusicPlayer() {
       window.removeEventListener('click', startMusic)
       window.removeEventListener('touchstart', startMusic)
     }
-  }, [started])
+  }, [started, musicBlob])
 
   return (
     <audio
       ref={audioRef}
-      src={MUSIC_URL}
-      crossOrigin="anonymous"
+      src={musicBlob}
       loop
     />
   )
