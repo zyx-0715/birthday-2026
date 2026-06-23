@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 
-const MUSIC_URL = 'https://raw.githubusercontent.com/zyx-0715/something/5b26b80af9d268e7dc0e3f27ece6f3e699c37310/music/music.mp3'
+// 暫時用測試音樂檢查是否能播
+const MUSIC_URL = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
 
 export default function MusicPlayer() {
   const audioRef = useRef(null)
@@ -10,18 +11,17 @@ export default function MusicPlayer() {
     const audio = audioRef.current
     if (!audio || started) return
 
-    // 監聽任何使用者互動（點擊、觸碰等）
     const startMusic = async () => {
       try {
-        audio.volume = 0.5  // 設定音量 50%
+        audio.volume = 0.5
         await audio.play()
         setStarted(true)
+        console.log('✅ 音樂開始播放')
       } catch (err) {
-        console.log('播放失敗:', err)
+        console.log('❌ 播放失敗:', err)
       }
     }
 
-    // 監聽使用者點擊
     window.addEventListener('click', startMusic, { once: true })
     window.addEventListener('touchstart', startMusic, { once: true })
 
